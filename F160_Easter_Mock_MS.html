@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F160 Mock Mark Scheme – RunTrack</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: #e4e0d8;
+    --text: #1a1816;
+    --muted: #7a756d;
+    --accent: #2d6a4f;
+    --accent-light: #e8f5ee;
+    --mark-bg: #fff8e1;
+    --mark-border: #f0c040;
+    --tag-bg: #ede9e3;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.15rem;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  .header-left p { font-size: 0.78rem; color: var(--muted); margin-top: 1px; }
+
+  .progress-info { font-size: 0.82rem; color: var(--muted); text-align: right; }
+
+  .progress-bar-wrap {
+    width: 140px; height: 4px;
+    background: var(--border); border-radius: 2px;
+    margin-top: 5px; margin-left: auto;
+  }
+
+  .progress-bar-fill {
+    height: 100%; background: var(--accent);
+    border-radius: 2px; transition: width 0.4s ease;
+  }
+
+  .nav-dots {
+    display: flex; gap: 6px;
+    justify-content: center;
+    padding: 16px 24px 0;
+    flex-wrap: wrap;
+  }
+
+  .nav-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 0.72rem; font-weight: 500;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .nav-dot:hover { border-color: var(--accent); color: var(--accent); }
+  .nav-dot.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .nav-dot.visited { border-color: var(--accent); color: var(--accent); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 24px 20px 80px; }
+
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-header {
+    padding: 18px 22px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+
+  .q-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.7rem; line-height: 1;
+    color: var(--accent); min-width: 32px;
+  }
+
+  .q-meta { flex: 1; }
+  .q-title { font-weight: 500; font-size: 0.95rem; }
+  .q-topic { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+  .marks-badge {
+    background: var(--mark-bg);
+    border: 1px solid var(--mark-border);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.75rem; font-weight: 500;
+    color: #7a5c00; white-space: nowrap; margin-top: 2px;
+  }
+
+  .part { border-bottom: 1px solid var(--border); }
+  .part:last-child { border-bottom: none; }
+
+  .part-header {
+    padding: 14px 22px;
+    cursor: pointer;
+    display: flex; align-items: flex-start; gap: 12px;
+    user-select: none;
+    transition: background 0.15s;
+  }
+
+  .part-header:hover { background: #fafaf8; }
+
+  .part-label {
+    font-size: 0.72rem; font-weight: 500;
+    color: var(--accent); background: var(--accent-light);
+    border-radius: 4px; padding: 2px 7px;
+    white-space: nowrap; margin-top: 2px;
+  }
+
+  .part-question { flex: 1; font-size: 0.9rem; }
+  .part-marks { font-size: 0.78rem; color: var(--muted); white-space: nowrap; margin-top: 3px; }
+
+  .chevron {
+    color: var(--muted); font-size: 0.7rem;
+    margin-top: 5px; transition: transform 0.2s;
+  }
+  .chevron.open { transform: rotate(90deg); }
+
+  .part-body { display: none; padding: 0 22px 18px; animation: slideDown 0.2s ease; }
+  @keyframes slideDown { from { opacity: 0; } to { opacity: 1; } }
+  .part-body.open { display: block; }
+
+  .what-tested {
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    padding: 9px 13px; margin-bottom: 14px;
+    font-size: 0.8rem; color: #1e4d38;
+  }
+  .what-tested strong { font-weight: 500; }
+
+  .marking-note {
+    background: var(--mark-bg);
+    border: 1px solid var(--mark-border);
+    border-radius: 6px;
+    padding: 8px 13px; font-size: 0.8rem;
+    color: #6b4e00; margin-bottom: 14px;
+  }
+
+  .answers-label {
+    font-size: 0.72rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); margin-bottom: 8px;
+  }
+
+  .answer-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+
+  .answer-item {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 9px 12px;
+    background: var(--bg); border-radius: 6px;
+    font-size: 0.87rem; line-height: 1.5;
+    border: 1px solid transparent;
+    transition: border-color 0.15s;
+  }
+  .answer-item:hover { border-color: var(--border); }
+
+  .tick { color: var(--accent); font-size: 0.75rem; margin-top: 2px; flex-shrink: 0; }
+
+  .mark-chip {
+    background: var(--tag-bg); border-radius: 4px;
+    padding: 1px 6px; font-size: 0.7rem; font-weight: 500;
+    color: var(--muted); margin-left: auto; flex-shrink: 0; align-self: center;
+  }
+
+  .lor-table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.82rem; margin-bottom: 14px;
+    border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  }
+  .lor-table th {
+    background: var(--tag-bg); font-weight: 500;
+    padding: 8px 12px; text-align: left;
+    font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: 0.05em; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .lor-table td {
+    padding: 8px 12px; vertical-align: top;
+    border-bottom: 1px solid var(--border); line-height: 1.5;
+  }
+  .lor-table tr:last-child td { border-bottom: none; }
+  .lor-table tr:nth-child(even) td { background: #fafaf8; }
+
+  .level-badge {
+    display: inline-block;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 0.75rem; font-weight: 500;
+    text-align: center; line-height: 24px;
+  }
+
+  .section-title {
+    font-size: 0.75rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--muted); margin: 14px 0 7px;
+  }
+
+  .nav-row {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-top: 20px; gap: 10px;
+  }
+
+  .btn {
+    padding: 10px 20px; border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: var(--surface); cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 500;
+    color: var(--text); transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn.primary:hover { background: #235a40; border-color: #235a40; color: #fff; }
+
+  .overview-screen {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 28px;
+    margin-top: 20px; animation: fadeIn 0.3s ease;
+  }
+  .overview-screen h2 {
+    font-family: 'DM Serif Display', serif;
+    font-weight: 400; font-size: 1.4rem; margin-bottom: 6px;
+  }
+  .overview-screen p { color: var(--muted); font-size: 0.88rem; margin-bottom: 22px; }
+
+  .q-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .q-list-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; background: var(--bg);
+    border-radius: 7px; cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s; font-size: 0.88rem;
+  }
+  .q-list-item:hover { background: var(--accent-light); border-color: #c0dece; }
+
+  .q-list-num { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--accent); min-width: 20px; }
+  .q-list-info { flex: 1; }
+  .q-list-title { font-weight: 500; }
+  .q-list-topic { font-size: 0.75rem; color: var(--muted); margin-top: 1px; }
+  .q-list-marks { font-size: 0.78rem; color: var(--muted); }
+
+  .toggle-all-row { display: flex; justify-content: flex-end; padding: 12px 22px 0; }
+
+  .toggle-all-btn {
+    font-size: 0.78rem; color: var(--muted);
+    cursor: pointer; background: none; border: none;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: color 0.15s, text-decoration-color 0.15s; padding: 0;
+  }
+  .toggle-all-btn:hover { color: var(--accent); text-decoration-color: var(--accent); }
+
+  .fictional-notice {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>F160 Mock Mark Scheme</h1>
+    <p>Fundamentals of Application Development · RunTrack scenario</p>
+  </div>
+  <div class="progress-info">
+    <div id="progressLabel">Overview</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+</header>
+
+<div class="nav-dots" id="navDots"></div>
+<main id="mainContent"></main>
+
+<script>
+const questions = [
+  {
+    num: 1,
+    title: "Application Types",
+    topic: "TA1 – Programs & Applications, Application Types · 6 marks",
+    marks: 6,
+    parts: [
+      {
+        label: "a",
+        question: "State two differences between a program and an application.",
+        marks: 2,
+        tested: "PO1 — Knowledge recall. 1 mark per valid difference. Any two from the list below.",
+        answers: [
+          { text: "A program is a set of instructions for a computer; an application is designed for users to complete tasks", mark: "1" },
+          { text: "A program may not have a user interface; an application usually has a UI with menus and buttons", mark: "1" },
+          { text: "A program performs a specific function; an application consists of one or more programs working together", mark: "1" },
+        ]
+      },
+      {
+        label: "b",
+        question: "State the purpose and one characteristic of a lifestyle application.",
+        marks: 2,
+        tested: "PO1 — 1 mark for purpose, 1 mark for characteristic.",
+        answers: [
+          { text: "Purpose: to support healthy or organised living", mark: "1" },
+          { text: "Characteristic: uses real-time health/location inputs", mark: "1" },
+          { text: "Characteristic: integrates with wearable devices", mark: "1" },
+          { text: "Characteristic: helps manage daily tasks and routines", mark: "1" },
+        ],
+        note2: "Award 1 mark for the purpose and 1 mark for any one valid characteristic."
+      },
+      {
+        label: "c",
+        question: "Explain one reason why the RunTrack application would be classified as a lifestyle application.",
+        marks: 2,
+        tested: "PO2 — Application to scenario. 1 mark for the point, 1 mark for linking it to RunTrack.",
+        answers: [
+          { text: "Lifestyle apps support healthy living (1) — RunTrack helps runners track fitness and run times, which supports a healthy routine (1)", mark: "1+1" },
+          { text: "Lifestyle apps use real-time data inputs (1) — the app uses real-time run time data to help users monitor their health and progress (1)", mark: "1+1" },
+        ]
+      }
+    ]
+  },
+  {
+    num: 2,
+    title: "Operating Systems",
+    topic: "TA1 – Operating Systems · 6 marks",
+    marks: 6,
+    parts: [
+      {
+        label: "a",
+        question: "State two characteristics of a proprietary operating system.",
+        marks: 2,
+        tested: "PO1 — Knowledge recall. 1 mark per valid characteristic. Any two from the list.",
+        answers: [
+          { text: "Source code is hidden and not legally modifiable", mark: "1" },
+          { text: "Requires a licence or subscription to use", mark: "1" },
+          { text: "Maintained solely by the developer/company that owns it", mark: "1" },
+          { text: "Often hardware-locked, e.g. iOS only runs on Apple devices", mark: "1" },
+        ]
+      },
+      {
+        label: "b",
+        question: "Explain one advantage and one disadvantage of developing RunTrack for a proprietary operating system such as iOS.",
+        marks: 4,
+        tested: "PO2 — 2 marks per point (1 to identify + 1 to link to the scenario). One advantage AND one disadvantage required.",
+        note: "You must give both an advantage and a disadvantage — one alone will not earn full marks.",
+        sections: [
+          {
+            heading: "Advantage (any one)",
+            answers: [
+              { text: "User-friendly and well-tested (1) — users who are not confident with technology would find a familiar, polished interface easier to use (1)", mark: "1+1" },
+              { text: "Official support provided (1) — the small team with no in-house developers would benefit from vendor support for troubleshooting (1)", mark: "1+1" },
+              { text: "Stable and secure (1) — runners' personal data would be better protected with built-in security (1)", mark: "1+1" },
+            ]
+          },
+          {
+            heading: "Disadvantage (any one)",
+            answers: [
+              { text: "Licensing can be expensive (1) — the club has a limited £5,000 budget so developer licence fees reduce the available funds (1)", mark: "1+1" },
+              { text: "Often hardware-locked (1) — building only for iOS would exclude Android users in the club, limiting the audience (1)", mark: "1+1" },
+              { text: "Limited customisation (1) — the team may not be able to customise the app as freely to meet the club's specific needs (1)", mark: "1+1" },
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    num: 3,
+    title: "Development Models & Phases",
+    topic: "TA2 – Development Models & Phases · 7 marks",
+    marks: 7,
+    parts: [
+      {
+        label: "a",
+        question: "Define the term 'software development model'.",
+        marks: 1,
+        tested: "PO1 — 1 mark for a valid definition.",
+        answers: [
+          { text: "A structured approach/framework that guides the process of developing software from start to finish", mark: "1" },
+        ]
+      },
+      {
+        label: "b",
+        question: "State two characteristics of the agile software development model.",
+        marks: 2,
+        tested: "PO1 — 1 mark per valid characteristic. Any two from the list.",
+        answers: [
+          { text: "Work is completed in small chunks called sprints/iterations", mark: "1" },
+          { text: "Relies on frequent stakeholder collaboration and feedback", mark: "1" },
+          { text: "Highly flexible and can adapt to changing requirements", mark: "1" },
+          { text: "Delivers working software in short time periods", mark: "1" },
+        ]
+      },
+      {
+        label: "c",
+        question: "Explain one reason why the agile model would be suitable for the RunTrack project.",
+        marks: 2,
+        tested: "PO2 — 1 mark for the point, 1 mark for linking it to the RunTrack scenario.",
+        answers: [
+          { text: "Agile allows a basic version to be released first (1) — the club wants a working version first with features added later, which matches agile sprints (1)", mark: "1+1" },
+          { text: "Agile relies on frequent stakeholder feedback (1) — the committee can review each sprint and guide the direction of development (1)", mark: "1+1" },
+          { text: "Agile delivers working software quickly (1) — this suits the 12-week deadline as each sprint produces usable features (1)", mark: "1+1" },
+        ]
+      },
+      {
+        label: "d",
+        question: "Describe two phases of software development that would take place during the RunTrack project.",
+        marks: 2,
+        tested: "PO1 — 1 mark per valid phase described. Any two from the list.",
+        answers: [
+          { text: "Planning — identifying requirements and assessing whether the project is feasible", mark: "1" },
+          { text: "Design — creating the blueprint for how the application will look and function", mark: "1" },
+          { text: "Construction — writing the code and building the application", mark: "1" },
+          { text: "Testing — checking the application works correctly and meets requirements", mark: "1" },
+          { text: "Implementation — deploying the application for users to access", mark: "1" },
+          { text: "Maintenance — updating and fixing the application after release", mark: "1" },
+        ]
+      }
+    ]
+  },
+  {
+    num: 4,
+    title: "Planning & Project Tools",
+    topic: "TA3 – Planning & Project Tools · 8 marks",
+    marks: 8,
+    parts: [
+      {
+        label: "a",
+        question: "State two advantages of planning a software development project.",
+        marks: 2,
+        tested: "PO1 — 1 mark per valid advantage. Any two from the list.",
+        answers: [
+          { text: "Sets clear goals and direction for the project", mark: "1" },
+          { text: "Identifies necessary resources such as time, money, and people", mark: "1" },
+          { text: "Improves team organisation and time management", mark: "1" },
+          { text: "Helps avoid missed deadlines and overrunning costs", mark: "1" },
+        ]
+      },
+      {
+        label: "b",
+        question: "Identify two planning considerations that the club should account for in this project.",
+        marks: 2,
+        tested: "PO2 — 1 mark per valid consideration drawn from the scenario.",
+        answers: [
+          { text: "Budget — they have a limited budget of £5,000", mark: "1" },
+          { text: "Time — they need a working version within 12 weeks", mark: "1" },
+          { text: "Resources — they have no in-house developers and need to hire a team", mark: "1" },
+          { text: "Legislation — data protection laws apply as the app stores personal data such as names and emails", mark: "1" },
+        ]
+      },
+      {
+        label: "c",
+        question: "Explain two ways a Gantt chart could help the club manage the development of RunTrack within their 12-week deadline.",
+        marks: 4,
+        tested: "PO2 — 2 marks per way (1 for the point, 1 for linking to the scenario). Any two ways.",
+        answers: [
+          { text: "A Gantt chart visualises tasks along a timeline (1) — the club can see whether all tasks fit within the 12-week window and adjust if needed (1)", mark: "1+1" },
+          { text: "A Gantt chart shows task overlaps and dependencies (1) — the team can identify which tasks can run simultaneously to save time on the tight schedule (1)", mark: "1+1" },
+          { text: "A Gantt chart tracks progress against planned dates (1) — the volunteer committee can monitor whether the hired developers are on track (1)", mark: "1+1" },
+        ]
+      }
+    ]
+  },
+  {
+    num: 5,
+    title: "Gathering Requirements & Specifications",
+    topic: "TA4 – Gathering Requirements & Specifications · 8 marks",
+    marks: 8,
+    parts: [
+      {
+        label: "a",
+        question: "State what is meant by the terms 'functional requirement' and 'non-functional requirement'.",
+        marks: 2,
+        tested: "PO1 — 1 mark per valid definition.",
+        answers: [
+          { text: "Functional requirement — what the system must do / a feature the system must have", mark: "1" },
+          { text: "Non-functional requirement — how the system should perform / a quality or constraint the system must meet", mark: "1" },
+        ]
+      },
+      {
+        label: "b",
+        question: "Identify one functional requirement and one non-functional requirement for RunTrack.",
+        marks: 2,
+        tested: "PO2 — 1 mark per valid requirement identified from the scenario. One of each type required.",
+        note: "You must identify one functional AND one non-functional requirement — both are needed for full marks.",
+        sections: [
+          {
+            heading: "Functional (any one)",
+            answers: [
+              { text: "The app must allow users to log run times", mark: "1" },
+              { text: "The app must display progress charts", mark: "1" },
+              { text: "The app must send push notifications", mark: "1" },
+            ]
+          },
+          {
+            heading: "Non-functional (any one)",
+            answers: [
+              { text: "Data must be stored in the cloud", mark: "1" },
+              { text: "The app must work on both Android and iOS", mark: "1" },
+            ]
+          }
+        ]
+      },
+      {
+        label: "c",
+        question: "Explain two methods of gathering client requirements that the development team could use with the club.",
+        marks: 4,
+        tested: "PO2 — 2 marks per method (1 for naming the method, 1 for linking it to the scenario). Any two methods.",
+        answers: [
+          { text: "Interviews (1) — the team could interview each committee member individually to understand specific needs and priorities (1)", mark: "1+1" },
+          { text: "Questionnaires (1) — could be sent to all club members to quickly gather a wide range of requirements from the actual end users (1)", mark: "1+1" },
+          { text: "Focus groups (1) — a small group of runners from different age groups could discuss features they want, giving diverse perspectives (1)", mark: "1+1" },
+          { text: "Observation (1) — the team could observe runners at a park run to see how they currently record times and identify pain points (1)", mark: "1+1" },
+        ]
+      }
+    ]
+  },
+  {
+    num: 6,
+    title: "HCI & Visual Design",
+    topic: "TA5 – HCI & Visual Design (PO3) · 6 marks",
+    marks: 6,
+    isLOR: true,
+    question: "Analyse the impact of visual design considerations on the effectiveness of the RunTrack application for its target users.",
+    levels: [
+      { level: 3, range: "5–6", desc: "A thorough response. Two or more visual design considerations are analysed with clear links to the scenario and target users. Development shows how these considerations improve effectiveness. A balanced view is presented with a brief conclusion." },
+      { level: 2, range: "3–4", desc: "A reasonable response with some development. At least one consideration is linked to the scenario. May lack consistent analysis or a clear conclusion." },
+      { level: 1, range: "1–2", desc: "A basic response. Points are stated with little or no development. Mostly recall with no analysis or scenario reference." },
+      { level: 0, range: "0",   desc: "No response or nothing worthy of credit." },
+    ],
+    sections: [
+      {
+        heading: "Visual design considerations",
+        answers: [
+          "Typography — using clear, large font sizes would help older users who may have difficulty reading small text on a mobile screen.",
+          "Location hierarchy — placing the most important features (e.g. 'log run time') prominently so users who are not confident with technology can find them easily.",
+          "Interface messages — providing clear error messages and help text would guide users who are unfamiliar with apps.",
+          "Colour — using strong colour contrast and not relying solely on colour to convey meaning would improve accessibility for all ages.",
+          "Interaction design — using familiar touch interactions such as large buttons would reduce frustration for less confident users.",
+        ]
+      },
+      {
+        heading: "Limitations / counterpoints",
+        answers: [
+          "Visual design alone does not guarantee a good user experience — the underlying functionality must also work correctly.",
+          "Over-simplifying the design for less confident users could make it feel basic or limited for younger, more tech-savvy users.",
+          "Good visual design takes time and budget, which may be limited given the £5,000 budget and 12-week deadline.",
+        ]
+      }
+    ]
+  },
+  {
+    num: 7,
+    title: "Job Roles & Communication",
+    topic: "TA6 – Job Roles & Communication · 4 marks",
+    marks: 4,
+    parts: [
+      {
+        label: "a",
+        question: "Outline the role of a User Experience Designer (UXD) in application development.",
+        marks: 2,
+        tested: "PO1 — Up to 2 marks for a valid outline.",
+        answers: [
+          { text: "A UXD focuses on the overall experience a user has when interacting with an application", mark: "1" },
+          { text: "Their goal is to increase user satisfaction and reduce frustration by making the application easy and enjoyable to use", mark: "1" },
+        ]
+      },
+      {
+        label: "b",
+        question: "Describe one communication skill the development team would need to use when meeting with the volunteer committee.",
+        marks: 2,
+        tested: "PO2 — 1 mark for the skill, 1 mark for linking it to the scenario.",
+        answers: [
+          { text: "Appropriate language (1) — the committee are volunteers not developers, so the team must avoid jargon and use simple terms (1)", mark: "1+1" },
+          { text: "Questioning techniques such as probing/clarifying questions (1) — used to explore the committee's ideas in detail and check understanding (1)", mark: "1+1" },
+          { text: "Active listening / verbal communication (1) — listening carefully ensures the committee's needs are accurately captured (1)", mark: "1+1" },
+          { text: "Non-verbal communication (1) — reading facial expressions could help identify confusion or disagreement during meetings (1)", mark: "1+1" },
+        ]
+      }
+    ]
+  },
+  {
+    num: 8,
+    title: "CPA & Decomposition",
+    topic: "TA3/TA4 – CPA & Decomposition · 6 marks",
+    marks: 6,
+    parts: [
+      {
+        label: "a",
+        question: "State what is meant by 'critical path analysis' and explain how it identifies the minimum project completion time.",
+        marks: 2,
+        tested: "PO1 — 1 mark for definition, 1 mark for explanation.",
+        answers: [
+          { text: "CPA is a project planning technique that maps out task dependencies", mark: "1" },
+          { text: "It identifies the longest sequence of dependent tasks — this is the critical path, which determines the minimum time to complete the project", mark: "1" },
+        ]
+      },
+      {
+        label: "b",
+        question: "Explain two decomposition methods the development team could use to break down the RunTrack requirements into manageable parts.",
+        marks: 4,
+        tested: "PO2 — 2 marks per method (1 for naming the method, 1 for linking it to the scenario). Any two methods.",
+        answers: [
+          { text: "Top-down modularisation (1) — the team could start with the overall RunTrack application and break it down into modules such as 'log times', 'view progress', and 'social feed' (1)", mark: "1+1" },
+          { text: "Abstraction (1) — the team could simplify the problem by ignoring irrelevant details at first and focusing on the core features the club needs (1)", mark: "1+1" },
+          { text: "Pattern recognition (1) — the team could identify similarities between features (e.g. logging a time and viewing a chart both need the same data) and reuse components (1)", mark: "1+1" },
+          { text: "Parsing (1) — the team could systematically break down the requirements list into specific, actionable development tasks (1)", mark: "1+1" },
+        ]
+      }
+    ]
+  },
+  {
+    num: 9,
+    title: "Discuss: Waterfall vs Agile",
+    topic: "TA2/TA3 – Development Models (PO3) · 9 marks",
+    marks: 9,
+    isLOR: true,
+    question: "Discuss the suitability of the waterfall model and the agile model for the development of the RunTrack application.",
+    levels: [
+      { level: 3, range: "7–9", desc: "A thorough and well-structured response. Multiple points about both models are fully analysed with consistent links to the RunTrack scenario. A balanced view is presented with counterpoints. A clear, well-reasoned conclusion recommends one model with justification." },
+      { level: 2, range: "4–6", desc: "A reasonable response with some development and analysis. Points are partially linked to the scenario. Some balance shown but the conclusion may be underdeveloped or one-sided." },
+      { level: 1, range: "1–3", desc: "A basic response. Points are stated with minimal development or reasoning. Little or no reference to the scenario. No clear conclusion." },
+      { level: 0, range: "0",   desc: "No response or nothing worthy of credit." },
+    ],
+    sections: [
+      {
+        heading: "Waterfall model",
+        answers: [
+          "Linear and structured — all phases completed in order before moving on.",
+          "All requirements must be defined at the start — could be difficult for the club as they may not fully know what they want upfront.",
+          "Advantage: easy to understand and manage — suits the volunteer committee who may not be familiar with complex processes.",
+          "Disadvantage: inflexible — if the club changes requirements mid-project, going back would be costly and time-consuming.",
+          "Disadvantage: no working product until the end — the club would not see a working version until the full 12 weeks, risking a product that doesn't meet needs.",
+        ]
+      },
+      {
+        heading: "Agile model",
+        answers: [
+          "Highly flexible — works in small sprints, delivering working features regularly.",
+          "Relies on frequent collaboration — the committee can review and give feedback after each sprint.",
+          "Advantage: a basic version can be released first — matches the club's stated preference.",
+          "Advantage: adapts to changes — the club can adjust priorities as they see the product develop.",
+          "Disadvantage: scope creep risk — the committee may keep requesting features, pushing past the £5,000 budget or 12-week deadline.",
+        ]
+      },
+      {
+        heading: "Conclusion / judgement",
+        answers: [
+          "Agile is more suitable because the club has explicitly stated they want a basic version first with features added later.",
+          "The tight budget and deadline favour agile, as working features are delivered early, allowing the club to assess value.",
+          "Waterfall's rigidity would be risky given the club may not fully know their requirements at the start.",
+          "Accept any well-reasoned conclusion clearly supported by evidence from the scenario.",
+        ]
+      }
+    ]
+  }
+];
+
+let currentView = 'overview';
+let visitedSet = new Set();
+
+function renderNavDots() {
+  const container = document.getElementById('navDots');
+  container.innerHTML = '';
+
+  const overviewDot = document.createElement('button');
+  overviewDot.className = 'nav-dot' + (currentView === 'overview' ? ' active' : '');
+  overviewDot.textContent = '⊞';
+  overviewDot.title = 'Overview';
+  overviewDot.onclick = () => { currentView = 'overview'; render(); };
+  container.appendChild(overviewDot);
+
+  questions.forEach((q, i) => {
+    const dot = document.createElement('button');
+    dot.className = 'nav-dot' +
+      (currentView === i ? ' active' : '') +
+      (visitedSet.has(i) && currentView !== i ? ' visited' : '');
+    dot.textContent = q.num;
+    dot.title = 'Q' + q.num + ' – ' + q.title;
+    dot.onclick = () => { currentView = i; visitedSet.add(i); render(); };
+    container.appendChild(dot);
+  });
+
+  const pct = currentView === 'overview' ? 0 : Math.round(((currentView + 1) / questions.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressLabel').textContent =
+    currentView === 'overview' ? 'Overview' : 'Question ' + (currentView + 1) + ' of ' + questions.length;
+}
+
+function togglePart(el) {
+  const body = el.nextElementSibling;
+  const chev = el.querySelector('.chevron');
+  const open = body.classList.contains('open');
+  body.classList.toggle('open', !open);
+  chev.classList.toggle('open', !open);
+}
+
+function toggleAllParts(btn, card) {
+  const bodies = card.querySelectorAll('.part-body');
+  const chevs = card.querySelectorAll('.chevron');
+  const anyOpen = Array.from(bodies).some(b => b.classList.contains('open'));
+  bodies.forEach(b => b.classList.toggle('open', !anyOpen));
+  chevs.forEach(c => c.classList.toggle('open', !anyOpen));
+  btn.textContent = anyOpen ? 'Show all answers' : 'Hide all answers';
+}
+
+function buildAnswerList(answers) {
+  const ul = document.createElement('ul');
+  ul.className = 'answer-list';
+  answers.forEach(a => {
+    const li = document.createElement('li');
+    li.className = 'answer-item';
+    li.innerHTML = `<span class="tick">✓</span><span>${typeof a === 'string' ? a : a.text}</span>` +
+      (a.mark ? `<span class="mark-chip">${a.mark}</span>` : '');
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+function renderOverview() {
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'overview-screen';
+  div.innerHTML = `
+    <h2>F160 Mock Mark Scheme</h2>
+    <p>Select a question below to review the acceptable answers and marking guidance. Open each part to reveal the answers.</p>
+    <div class="fictional-notice">Note: The scenario used in this mark scheme is entirely fictional and has been created for assessment purposes only.</div>
+    <div class="q-list" id="qList"></div>
+  `;
+  main.appendChild(div);
+  const list = document.getElementById('qList');
+  questions.forEach((q, i) => {
+    const item = document.createElement('div');
+    item.className = 'q-list-item';
+    item.innerHTML = `
+      <div class="q-list-num">${q.num}</div>
+      <div class="q-list-info">
+        <div class="q-list-title">${q.title}</div>
+        <div class="q-list-topic">${q.topic}</div>
+      </div>
+      <div class="q-list-marks">${q.marks} marks</div>
+    `;
+    item.onclick = () => { currentView = i; visitedSet.add(i); render(); };
+    list.appendChild(item);
+  });
+}
+
+function renderQuestion(idx) {
+  const q = questions[idx];
+  const main = document.getElementById('mainContent');
+  main.innerHTML = '';
+
+  const card = document.createElement('div');
+  card.className = 'q-card';
+
+  card.innerHTML = `
+    <div class="q-header">
+      <div class="q-number">${q.num}</div>
+      <div class="q-meta">
+        <div class="q-title">${q.title}</div>
+        <div class="q-topic">${q.topic}</div>
+      </div>
+      <div class="marks-badge">${q.marks} marks</div>
+    </div>
+  `;
+
+  if (q.isLOR) {
+    const body = document.createElement('div');
+    body.style.padding = '18px 22px';
+
+    const tested = document.createElement('div');
+    tested.className = 'what-tested';
+    tested.innerHTML = `<strong>The question:</strong> ${q.question}`;
+    body.appendChild(tested);
+
+    const note = document.createElement('div');
+    note.className = 'marking-note';
+    note.innerHTML = '⚖️ <strong>Level of Response:</strong> Read the whole answer first, then determine the level starting from the highest.';
+    body.appendChild(note);
+
+    const tableLabel = document.createElement('div');
+    tableLabel.className = 'answers-label';
+    tableLabel.textContent = 'Level descriptors';
+    body.appendChild(tableLabel);
+
+    const table = document.createElement('table');
+    table.className = 'lor-table';
+    table.innerHTML = `<tr><th>Level</th><th>Marks</th><th>Descriptor</th></tr>`;
+    q.levels.forEach(l => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><span class="level-badge">${l.level}</span></td><td>${l.range}</td><td>${l.desc}</td>`;
+      table.appendChild(tr);
+    });
+    body.appendChild(table);
+
+    const icLabel = document.createElement('div');
+    icLabel.className = 'answers-label';
+    icLabel.style.marginTop = '16px';
+    icLabel.textContent = 'Indicative content (not exhaustive — any valid, well-applied point is credited)';
+    body.appendChild(icLabel);
+
+    q.sections.forEach(sec => {
+      const sh = document.createElement('div');
+      sh.className = 'section-title';
+      sh.textContent = sec.heading;
+      body.appendChild(sh);
+      body.appendChild(buildAnswerList(sec.answers));
+    });
+
+    card.appendChild(body);
+  } else {
+    const togRow = document.createElement('div');
+    togRow.className = 'toggle-all-row';
+    const togBtn = document.createElement('button');
+    togBtn.className = 'toggle-all-btn';
+    togBtn.textContent = 'Show all answers';
+    togBtn.onclick = () => toggleAllParts(togBtn, card);
+    togRow.appendChild(togBtn);
+    card.appendChild(togRow);
+
+    q.parts.forEach(part => {
+      const partDiv = document.createElement('div');
+      partDiv.className = 'part';
+
+      const header = document.createElement('div');
+      header.className = 'part-header';
+      header.innerHTML = `
+        <span class="part-label">(${part.label})</span>
+        <div style="flex:1">
+          <div class="part-question">${part.question}</div>
+          <div class="part-marks">${part.marks} mark${part.marks > 1 ? 's' : ''}</div>
+        </div>
+        <span class="chevron">▶</span>
+      `;
+      header.onclick = () => togglePart(header);
+      partDiv.appendChild(header);
+
+      const body = document.createElement('div');
+      body.className = 'part-body';
+
+      const testedDiv = document.createElement('div');
+      testedDiv.className = 'what-tested';
+      testedDiv.innerHTML = `<strong>What's being tested:</strong> ${part.tested}`;
+      body.appendChild(testedDiv);
+
+      if (part.note) {
+        const noteDiv = document.createElement('div');
+        noteDiv.className = 'marking-note';
+        noteDiv.innerHTML = `⚠️ ${part.note}`;
+        body.appendChild(noteDiv);
+      }
+
+      if (part.sections) {
+        part.sections.forEach(sec => {
+          const sh = document.createElement('div');
+          sh.className = 'section-title';
+          sh.textContent = sec.heading;
+          body.appendChild(sh);
+          body.appendChild(buildAnswerList(sec.answers));
+        });
+      } else {
+        const label = document.createElement('div');
+        label.className = 'answers-label';
+        label.textContent = 'Acceptable answers';
+        body.appendChild(label);
+        body.appendChild(buildAnswerList(part.answers));
+      }
+
+      if (part.note2) {
+        const n2 = document.createElement('div');
+        n2.className = 'marking-note';
+        n2.style.marginTop = '10px';
+        n2.innerHTML = `📌 ${part.note2}`;
+        body.appendChild(n2);
+      }
+
+      partDiv.appendChild(body);
+      card.appendChild(partDiv);
+    });
+  }
+
+  main.appendChild(card);
+
+  const nav = document.createElement('div');
+  nav.className = 'nav-row';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'btn';
+  prevBtn.innerHTML = '← Previous';
+  prevBtn.disabled = idx === 0;
+  prevBtn.onclick = () => { currentView = idx - 1; visitedSet.add(idx - 1); render(); window.scrollTo(0,0); };
+
+  const overBtn = document.createElement('button');
+  overBtn.className = 'btn';
+  overBtn.innerHTML = '⊞ Overview';
+  overBtn.onclick = () => { currentView = 'overview'; render(); window.scrollTo(0,0); };
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'btn primary';
+  nextBtn.innerHTML = idx === questions.length - 1 ? '✓ All done' : 'Next →';
+  nextBtn.disabled = idx === questions.length - 1;
+  nextBtn.onclick = () => { currentView = idx + 1; visitedSet.add(idx + 1); render(); window.scrollTo(0,0); };
+
+  nav.appendChild(prevBtn);
+  nav.appendChild(overBtn);
+  nav.appendChild(nextBtn);
+  main.appendChild(nav);
+}
+
+function render() {
+  renderNavDots();
+  if (currentView === 'overview') {
+    renderOverview();
+  } else {
+    renderQuestion(currentView);
+  }
+}
+
+render();
+</script>
+</body>
+</html>
