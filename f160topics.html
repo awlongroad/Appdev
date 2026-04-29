@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>F160 · Fundamentals of Application Development</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #EFEDE8;
+    color: #1a1a1a;
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 48px 24px 0;
+  }
+
+  .breadcrumb { font-size: 13px; color: #888; margin-bottom: 10px; }
+  h1 { font-size: 30px; font-weight: 600; letter-spacing: -.5px; margin-bottom: 8px; color: #111; }
+  .subtitle { font-size: 14px; color: #888; margin-bottom: 28px; line-height: 1.5; }
+
+  .progress-bar-wrap { height: 4px; background: #e0ddd8; border-radius: 2px; margin-bottom: 20px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; background: #3B6D11; border-radius: 2px; transition: width .3s ease; }
+
+  .stats { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-pill { font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 20px; }
+  .stat-r { background: #FCEBEB; color: #A32D2D; }
+  .stat-a { background: #FEF3C7; color: #92400E; }
+  .stat-g { background: #EAF3DE; color: #27500A; }
+  .stat-n { background: #f0f0ed; color: #666; }
+
+  .filter-bar { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; align-items: center; }
+  .filter-label { font-size: 12px; color: #888; font-weight: 500; margin-right: 4px; letter-spacing: .04em; text-transform: uppercase; }
+  .filter-btn { border: 1px solid #ccc; background: #fff; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all .15s; color: #555; }
+  .filter-btn:hover { background: #f5f5f5; border-color: #aaa; }
+  .filter-btn.active-all  { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .filter-btn.active-r    { background: #E24B4A; color: #fff; border-color: #E24B4A; }
+  .filter-btn.active-a    { background: #D97706; color: #fff; border-color: #D97706; }
+  .filter-btn.active-g    { background: #3B6D11; color: #fff; border-color: #3B6D11; }
+  .filter-btn.active-none { background: #888; color: #fff; border-color: #888; }
+
+  .section-group { margin-bottom: 8px; }
+  .section-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: #888; margin: 24px 0 8px; }
+
+  .topic-list { display: flex; flex-direction: column; }
+
+  .topic-row {
+    background: #fff;
+    border-bottom: 1px solid #e8e5e0;
+    overflow: hidden;
+  }
+  .topic-row:first-child { border-radius: 10px 10px 0 0; }
+  .topic-row:last-child  { border-radius: 0 0 10px 10px; border-bottom: none; }
+  .topic-row:only-child  { border-radius: 10px; border-bottom: none; }
+  .topic-row.hidden      { display: none; }
+
+  .topic-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+  }
+
+  .ref-badge { font-size: 12px; font-weight: 600; color: #888; min-width: 38px; flex-shrink: 0; }
+
+  .topic-info { flex: 1; min-width: 0; }
+  .topic-name { font-size: 14px; font-weight: 500; color: #111; text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topic-name:hover { text-decoration: underline; color: #185FA5; }
+  .topic-keys { font-size: 12px; color: #999; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .row-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+  .vid-links { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
+
+  .vid-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    text-decoration: none;
+    border: 1px solid #e0ddd8;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    background: none;
+    transition: all .15s;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .vid-link:hover { background: #f5f5f5; border-color: #bbb; color: #333; }
+  .vid-link.yt { color: #185FA5; border-color: #b5d4f4; background: #f0f7ff; }
+  .vid-link.yt:hover { background: #e6f1fb; border-color: #378ADD; }
+
+  .rag-group { display: flex; gap: 4px; flex-shrink: 0; }
+  .rag-btn {
+    width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid #ddd;
+    background: transparent; cursor: pointer; font-size: 11px; font-weight: 700;
+    color: #aaa; transition: all .15s; display: flex; align-items: center; justify-content: center;
+  }
+  .rag-btn:hover { border-color: #aaa; color: #666; }
+  .rag-btn.set-r { background: #E24B4A; border-color: #E24B4A; color: #fff; }
+  .rag-btn.set-a { background: #D97706; border-color: #D97706; color: #fff; }
+  .rag-btn.set-g { background: #3B6D11; border-color: #3B6D11; color: #fff; }
+
+  .empty-state {
+    text-align: center; padding: 48px 24px; color: #aaa; font-size: 14px;
+    background: #fff; border-radius: 10px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="breadcrumb">Application Development &middot; F160</div>
+  <h1>Fundamentals of Application Development</h1>
+  <p class="subtitle">Track your confidence on each topic using R / A / G, then filter to focus your time. Click the video links to watch CSNewbs videos on YouTube.</p>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress" style="width:0%"></div>
+  </div>
+
+  <div class="stats">
+    <span class="stat-pill stat-n" id="st-n">0 not set</span>
+    <span class="stat-pill stat-r" id="st-r">0 red</span>
+    <span class="stat-pill stat-a" id="st-a">0 amber</span>
+    <span class="stat-pill stat-g" id="st-g">0 green</span>
+  </div>
+
+  <div class="filter-bar">
+    <span class="filter-label">Show</span>
+    <button class="filter-btn active-all" data-filter="all">All topics</button>
+    <button class="filter-btn" data-filter="r">Red only</button>
+    <button class="filter-btn" data-filter="a">Amber only</button>
+    <button class="filter-btn" data-filter="g">Green only</button>
+    <button class="filter-btn" data-filter="none">Not set</button>
+  </div>
+
+  <div id="topic-container"></div>
+
+</div>
+
+<script>
+const TOPICS = [
+  { section:"Topic 1: Types of software", rows:[
+    { ref:"1.1",   name:"Programs and applications",  keys:"application, program, purpose, function, characteristics",
+      url:"https://www.csnewbs.com/f160-1-1-programsapplications",
+      vids:[{id:"JPIYpj308Kw",label:"Programs & Applications"}] },
+    { ref:"1.2",   name:"Operating systems",          keys:"operating system, open, proprietary, device type",
+      url:"https://www.csnewbs.com/f160-1-2-operatingsystems",
+      vids:[{id:"nveTdnYT8jE",label:"Open Operating Systems"}] },
+    { ref:"1.3.1", name:"Application types",          keys:"application type, entertainment, productivity, purpose",
+      url:"https://www.csnewbs.com/f160-1-3-1-application-types",
+      vids:[{id:"YFQf0XvX0l8",label:"Application Types"}] },
+    { ref:"1.3.2", name:"Software categories",        keys:"open software, advantages, disadvantages",
+      url:"https://www.csnewbs.com/f160-1-3-2-application-software-categories",
+      vids:[{id:"qmxWuE1GOqs",label:"Open Software"}] },
+    { ref:"1.3.3", name:"Software types",             keys:"bespoke, off-the-shelf, customisation",
+      url:"https://www.csnewbs.com/f160-1-3-3-app-software-types",
+      vids:[{id:"lZvfpwzOTjM",label:"Off-the-Shelf Software"},{id:"hXTrN_Mfv6A",label:"Bespoke Software"}] },
+  ]},
+  { section:"Topic 2: Software development models", rows:[
+    { ref:"2.1",  name:"Development models",          keys:"waterfall, iterative, agile, RAD, advantages, disadvantages",
+      url:"https://www.csnewbs.com/f160-2-1-software-development-models",
+      vids:[{id:"c3tF-eacLNA",label:"Dev Models (intro)"},{id:"9TEl-9wKRsY",label:"Waterfall Model"},{id:"cLQIAXPDke8",label:"Rapid Application Development"},{id:"Zc9qO-VuqEU",label:"Agile Model"}] },
+    { ref:"2.2a", name:"Common phases",               keys:"planning, design, creation, implementation, documentation",
+      url:"https://www.csnewbs.com/f160-2-2-software-development-phases",
+      vids:[{id:"zYKmcm4fot0",label:"Phases of Software Development"}] },
+    { ref:"2.2b", name:"Tasks and phases",            keys:"feasibility study, quality assurance, wireframe",
+      url:"https://www.csnewbs.com/f160-2-2-software-development-phases",
+      vids:[{id:"zYKmcm4fot0",label:"Phases of Software Development"}] },
+  ]},
+  { section:"Topic 3: Planning application development projects", rows:[
+    { ref:"3.1a", name:"Planning considerations",     keys:"budget, time, resources, constraints",
+      url:"https://www.csnewbs.com/f160-3-1-planning-projects",
+      vids:[{id:"XB4DqWhvAPw",label:"Planning Projects"},{id:"zaFrySD18Xg",label:"Planning Considerations"}] },
+    { ref:"3.1b", name:"Legislation",                 keys:"data protection, compliance, personal data",
+      url:"https://www.csnewbs.com/f160-3-1-planning-projects",
+      vids:[{id:"zaFrySD18Xg",label:"Planning Considerations (incl. Legislation)"}] },
+    { ref:"3.2",  name:"Planning tools",              keys:"CPA, CPM, critical path, feasibility",
+      url:"https://www.csnewbs.com/f160-3-2-project-planning-tools",
+      vids:[{id:"8IEAB33hVlQ",label:"Project Planning Tools"},{id:"KNVTg3X4qbg",label:"Critical Path Analysis"}] },
+  ]},
+  { section:"Topic 4: Application design scoping", rows:[
+    { ref:"4.1",  name:"Requirement gathering",       keys:"interview, questionnaire, observation",
+      url:"https://www.csnewbs.com/f160-4-1-client-requirements",
+      vids:[{id:"QPw96T7fBhM",label:"Gathering Client Requirements"}] },
+    { ref:"4.2a", name:"Client requirements",         keys:"functional, non-functional, constraints",
+      url:"https://www.csnewbs.com/f160-4-2-client-requirement-specifications",
+      vids:[{id:"pS067ysOci0",label:"Client Requirement Specifications"}] },
+    { ref:"4.2b", name:"Non-functional requirements", keys:"performance, security, usability",
+      url:"https://www.csnewbs.com/f160-4-2-client-requirement-specifications",
+      vids:[{id:"pS067ysOci0",label:"Client Requirement Specifications"}] },
+  ]},
+  { section:"Topic 5: Human computer interface and interaction", rows:[
+    { ref:"5.1.1",name:"Interaction types",           keys:"visual, touch, audio, gesture",
+      url:"https://www.csnewbs.com/f160-5-1-1-human-computer-interaction",
+      vids:[{id:"7tcTHpCxrRc",label:"Human-Computer Interaction"}] },
+    { ref:"5.1.2",name:"Devices",                     keys:"smart TV, smartphone, tablet, characteristics",
+      url:"https://www.csnewbs.com/f160-5-1-2-types-of-device",
+      vids:[{id:"PS5AGnBi5ec",label:"Device Types"}] },
+    { ref:"5.3a", name:"Design documents",            keys:"wireframe, visualisation diagram",
+      url:"https://www.csnewbs.com/f160-5-3-hci-designs-documents-diagrams",
+      vids:[{id:"iIIhBMsezOo",label:"Visual Design Considerations"},{id:"HuyprxnQ800",label:"Visualisation Diagrams"}] },
+    { ref:"5.3b", name:"Data flow diagrams",          keys:"DFD, process, data store, data flow",
+      url:"https://www.csnewbs.com/f160-5-3-hci-designs-documents-diagrams",
+      vids:[{id:"OSq3IeH4Bt8",label:"Data Flow Diagrams"}] },
+  ]},
+  { section:"Topic 6: Job roles and skills", rows:[
+    { ref:"6.1a", name:"Systems designer",            keys:"responsibility, system design",
+      url:"https://www.csnewbs.com/f160-6-1-job-roles",
+      vids:[{id:"tnNS-IGVZJ0",label:"Job Roles"}] },
+    { ref:"6.1b", name:"Project manager",             keys:"responsibility, planning, resources",
+      url:"https://www.csnewbs.com/f160-6-1-job-roles",
+      vids:[{id:"tnNS-IGVZJ0",label:"Job Roles"}] },
+    { ref:"6.2",  name:"Communication skills",        keys:"verbal, written, audience, stakeholders",
+      url:"https://www.csnewbs.com/f160-6-2-communication-skills",
+      vids:[{id:"ZfFdbB5gmLw",label:"Communication Skills"}] },
+  ]},
+];
+
+const ragState = {};
+let currentFilter = 'all';
+
+function buildUI() {
+  const container = document.getElementById('topic-container');
+
+  TOPICS.forEach(group => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'section-group';
+
+    const label = document.createElement('div');
+    label.className = 'section-label';
+    label.textContent = group.section;
+    groupEl.appendChild(label);
+
+    const list = document.createElement('div');
+    list.className = 'topic-list';
+
+    group.rows.forEach(t => {
+      const id = t.ref;
+      ragState[id] = null;
+
+      const row = document.createElement('div');
+      row.className = 'topic-row';
+      row.dataset.id = id;
+
+      const isMulti = t.vids.length > 1;
+
+      const vidLinksHtml = '<div class="vid-links">' +
+        t.vids.map(v =>
+          '<a class="vid-link yt" href="https://www.youtube.com/watch?v=' + v.id + '" target="_blank" rel="noopener">' +
+            '<svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="5" stroke="currentColor"/><path d="M4 3.5l3.5 2L4 7.5V3.5z" fill="currentColor"/></svg>' +
+            ' ' + (isMulti ? v.label : 'Watch video') +
+          '</a>'
+        ).join('') +
+      '</div>';
+
+      const header = document.createElement('div');
+      header.className = 'topic-header';
+      header.innerHTML =
+        '<div class="ref-badge">' + t.ref + '</div>' +
+        '<div class="topic-info">' +
+          '<a class="topic-name" href="' + t.url + '" target="_blank">' + t.name + '</a>' +
+          '<div class="topic-keys">' + t.keys + '</div>' +
+        '</div>' +
+        '<div class="row-right">' +
+          vidLinksHtml +
+          '<div class="rag-group">' +
+            '<button class="rag-btn" data-id="' + id + '" data-val="r">R</button>' +
+            '<button class="rag-btn" data-id="' + id + '" data-val="a">A</button>' +
+            '<button class="rag-btn" data-id="' + id + '" data-val="g">G</button>' +
+          '</div>' +
+        '</div>';
+      row.appendChild(header);
+      list.appendChild(row);
+    });
+
+    groupEl.appendChild(list);
+    container.appendChild(groupEl);
+  });
+
+  applyState();
+}
+
+function applyState() {
+  document.querySelectorAll('.topic-row').forEach(row => {
+    const id = row.dataset.id;
+    const val = ragState[id];
+
+    row.querySelectorAll('.rag-btn').forEach(btn => {
+      btn.classList.remove('set-r','set-a','set-g');
+      if (val && btn.dataset.val === val) btn.classList.add('set-' + val);
+    });
+
+    const show = currentFilter === 'all' || (currentFilter === 'none' && !val) || currentFilter === val;
+    row.classList.toggle('hidden', !show);
+  });
+
+  document.querySelectorAll('.section-group').forEach(grp => {
+    const anyVisible = [...grp.querySelectorAll('.topic-row')].some(r => !r.classList.contains('hidden'));
+    grp.style.display = anyVisible ? '' : 'none';
+  });
+
+  updateStats();
+  updateEmpty();
+}
+
+function updateStats() {
+  const vals = Object.values(ragState);
+  const total = vals.length;
+  const r = vals.filter(v => v==='r').length;
+  const a = vals.filter(v => v==='a').length;
+  const g = vals.filter(v => v==='g').length;
+  const n = vals.filter(v => !v).length;
+  document.getElementById('st-n').textContent = n + ' not set';
+  document.getElementById('st-r').textContent = r + ' red';
+  document.getElementById('st-a').textContent = a + ' amber';
+  document.getElementById('st-g').textContent = g + ' green';
+  document.getElementById('progress').style.width = (total ? Math.round(g/total*100) : 0) + '%';
+}
+
+function updateEmpty() {
+  const old = document.getElementById('empty-msg');
+  if (old) old.remove();
+  const any = [...document.querySelectorAll('.topic-row')].some(r => !r.classList.contains('hidden'));
+  if (!any) {
+    const m = document.createElement('div');
+    m.id = 'empty-msg'; m.className = 'empty-state';
+    m.textContent = 'No topics match this filter yet. Mark some topics first.';
+    document.getElementById('topic-container').appendChild(m);
+  }
+}
+
+document.getElementById('topic-container').addEventListener('click', e => {
+  const rag = e.target.closest('.rag-btn');
+  if (rag) {
+    const id = rag.dataset.id, val = rag.dataset.val;
+    ragState[id] = ragState[id] === val ? null : val;
+    applyState();
+    return;
+  }
+
+});
+
+document.querySelector('.filter-bar').addEventListener('click', e => {
+  const btn = e.target.closest('.filter-btn');
+  if (!btn) return;
+  currentFilter = btn.dataset.filter;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('active-all','active-r','active-a','active-g','active-none');
+  });
+  btn.classList.add('active-' + currentFilter);
+  applyState();
+});
+
+buildUI();
+</script>
+</body>
+</html>
