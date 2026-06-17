@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grade Calculator — Application Development</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #ECEAE3;
+  --surface: #F5F4EF;
+  --white: #FFFFFF;
+  --border: #D8D5CC;
+  --text: #1A1A18;
+  --text-2: #5A5853;
+  --text-3: #8C8A84;
+  --topbar: #1A1A18;
+  --active: #2563EB;
+  --radius: 8px;
+
+  --p-bg:#FAEEDA;  --p-bd:#E8A020; --p-tx:#5C3100;
+  --m-bg:#EAF3DE;  --m-bd:#7FB83A; --m-tx:#1A3D06;
+  --d-bg:#E6F1FB;  --d-bd:#5B9FDE; --d-tx:#05305A;
+  --ds-bg:#EEEDFE; --ds-bd:#9B91E8; --ds-tx:#1E185A;
+  --u-bg:#F5F4EF;  --u-bd:#D8D5CC; --u-tx:#6B6965;
+  --warn-bg:#FEF6E4; --warn-bd:#E8A020; --warn-tx:#5C3100;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Top bar ── */
+.topbar {
+  background: var(--topbar);
+  height: 6px;
+  width: 100%;
+}
+
+/* ── Layout ── */
+.page { max-width: 680px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+
+/* ── Header ── */
+.breadcrumb { font-size: 12px; color: var(--text-3); margin-bottom: .5rem; letter-spacing: .01em; }
+h1 { font-size: 28px; font-weight: 600; color: var(--text); margin-bottom: .35rem; letter-spacing: -.02em; }
+.subtitle { font-size: 14px; color: var(--text-2); margin-bottom: 2.5rem; }
+
+/* ── Section label ── */
+.sec-label {
+  font-size: 11px; font-weight: 500; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--text-3);
+  margin-bottom: .75rem; margin-top: 2rem;
+}
+
+/* ── Points explainer ── */
+.points-explainer {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+  margin-bottom: 2rem;
+}
+.pe-row { display: flex; gap: 1rem; align-items: flex-start; }
+.pe-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+.pe-text h3 { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+.pe-text p  { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+.pe-grades {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px;
+  padding-top: 10px; border-top: 0.5px solid var(--border);
+}
+.pe-grade-chip { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px; border: 0.5px solid; }
+
+/* ── Unit list ── */
+.unit-list { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; }
+.unit-row { display: flex; align-items: center; gap: 12px; padding: .9rem 1.25rem; border-bottom: 0.5px solid var(--border); }
+.unit-row:last-child { border-bottom: none; }
+.unit-code { font-size: 13px; font-weight: 600; color: var(--text); min-width: 38px; }
+.unit-info { flex: 1; }
+.unit-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.unit-meta { font-size: 12px; color: var(--text-3); }
+.status-pill {
+  font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px;
+  border: 0.5px solid; white-space: nowrap;
+}
+.pill-complete  { background: var(--surface); border-color: var(--border); color: var(--text-3); }
+.pill-active    { background: #EBF2FF; border-color: #93B8F0; color: var(--active); }
+.pill-upcoming  { background: var(--surface); border-color: var(--border); color: var(--text-3); }
+
+/* ── Input rows ── */
+.input-section { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; }
+
+.input-row {
+  display: grid; grid-template-columns: 1fr auto;
+  align-items: center; gap: 12px;
+  padding: 1rem 1.25rem; border-bottom: 0.5px solid var(--border);
+}
+.input-row:last-child { border-bottom: none; }
+.ir-left {}
+.ir-code { font-size: 13px; font-weight: 600; color: var(--text); }
+.ir-name { font-size: 12px; color: var(--text-3); margin-bottom: 8px; }
+.ir-slider-wrap { display: flex; align-items: center; gap: 10px; }
+.ir-slider-wrap input[type=range] { flex: 1; accent-color: var(--topbar); }
+.ir-val { font-size: 14px; font-weight: 600; color: var(--text); min-width: 48px; text-align: right; }
+.ir-right { text-align: right; }
+.ir-pts { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
+.ir-pts-label { font-size: 11px; color: var(--text-3); }
+.ir-unit-grade { margin-top: 4px; }
+
+.resub-note {
+  font-size: 11px; color: var(--text-2);
+  padding: .75rem 1.25rem;
+  background: var(--warn-bg);
+  border-top: 0.5px solid var(--warn-bd);
+  display: flex; gap: 6px; align-items: flex-start;
+  line-height: 1.5;
+}
+.resub-note span { flex:1; }
+
+.unit-below-pass .ir-pts { color: #B85C00; }
+.unit-below-pass { border-left: 3px solid var(--warn-bd); }
+
+/* ── Points bar ── */
+.points-bar-wrap { margin-bottom: 2rem; }
+.pb-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.pb-locked { font-size: 28px; font-weight: 600; color: var(--text); }
+.pb-locked-label { font-size: 12px; color: var(--text-3); }
+.pb-avail { font-size: 13px; color: var(--text-2); }
+
+.pb-track { height: 8px; background: var(--border); border-radius: 4px; overflow: visible; position: relative; margin-bottom: 6px; }
+.pb-segments { display: flex; height: 100%; border-radius: 4px; overflow: hidden; }
+.pb-seg-locked { background: var(--topbar); transition: flex .3s; }
+.pb-seg-remaining { background: #D8D5CC; transition: flex .3s; }
+
+.pb-markers { position: relative; height: 20px; }
+.pb-marker {
+  position: absolute; transform: translateX(-50%);
+  font-size: 10px; color: var(--text-3); text-align: center; line-height: 1.2;
+  white-space: nowrap;
+}
+.pb-marker::before {
+  content: ''; display: block; width: 1px; height: 6px;
+  background: var(--border); margin: 0 auto 2px;
+}
+
+/* ── Grade table — all grades always visible ── */
+.grade-table { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem; }
+.gt-header { display: grid; grid-template-columns: 80px 1fr 1fr 1fr; padding: .6rem 1.25rem; border-bottom: 0.5px solid var(--border); }
+.gt-header span { font-size: 11px; font-weight: 500; color: var(--text-3); letter-spacing: .06em; text-transform: uppercase; }
+.gt-header span:not(:first-child) { text-align: center; }
+
+.gt-row { display: grid; grid-template-columns: 80px 1fr 1fr 1fr; padding: .875rem 1.25rem; border-bottom: 0.5px solid var(--border); align-items: center; transition: opacity .2s; }
+.gt-row:last-child { border-bottom: none; }
+.gt-row.impossible { opacity: .3; }
+
+.gt-grade { font-size: 17px; font-weight: 600; }
+.gt-cell { text-align: center; }
+.gt-big { font-size: 16px; font-weight: 600; }
+.gt-small { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+.gt-check { font-size: 16px; color: #4A8A2A; }
+
+/* ── Unit gap warning ── */
+.gap-warning {
+  display: none;
+  background: var(--warn-bg); border: 0.5px solid var(--warn-bd);
+  border-radius: var(--radius); padding: .875rem 1.25rem;
+  margin-bottom: 2rem; font-size: 13px; color: var(--warn-tx); line-height: 1.6;
+}
+.gap-warning.show { display: block; }
+.gap-warning strong { font-weight: 600; }
+
+/* ── Footer note ── */
+.footer-note { font-size: 11px; color: var(--text-3); line-height: 1.7; padding-top: 1.5rem; border-top: 0.5px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="topbar"></div>
+
+<div class="page">
+
+  <p class="breadcrumb">Application Development</p>
+  <h1>Your grade forecast</h1>
+  <p class="subtitle">Enter your scores for the units you have completed or are working on. Your forecast updates instantly.</p>
+
+  <!-- POINTS EXPLAINER -->
+  <div class="points-explainer">
+    <div class="pe-row">
+      <div class="pe-icon">📊</div>
+      <div class="pe-text">
+        <h3>How the points system works</h3>
+        <p>Every unit you complete earns you points (called UMS — Uniform Mark Scale). Each unit is worth up to 60 points. Your five units add up to a maximum of 300 points. The more points you earn across all units, the higher your final grade.</p>
+        <div class="pe-grades">
+          <span class="pe-grade-chip" style="background:var(--p-bg);border-color:var(--p-bd);color:var(--p-tx)">Pass · 120+ pts</span>
+          <span class="pe-grade-chip" style="background:var(--m-bg);border-color:var(--m-bd);color:var(--m-tx)">Merit · 180+ pts</span>
+          <span class="pe-grade-chip" style="background:var(--d-bg);border-color:var(--d-bd);color:var(--d-tx)">Distinction · 240+ pts</span>
+          <span class="pe-grade-chip" style="background:var(--ds-bg);border-color:var(--ds-bd);color:var(--ds-tx)">Distinction* · 270+ pts</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- INPUTS -->
+  <p class="sec-label">Enter your results</p>
+  <div class="input-section">
+
+    <!-- F160 -->
+    <div class="input-row" id="row160">
+      <div class="ir-left">
+        <div class="ir-code">F160 <span style="font-weight:400;color:var(--text-3);font-size:11px">Exam · complete</span></div>
+        <div class="ir-name">Fundamentals of Application Development</div>
+        <div class="ir-slider-wrap">
+          <input type="range" min="0" max="60" value="0" step="1" id="s160">
+          <span class="ir-val"><span id="v160">0</span>/60</span>
+        </div>
+      </div>
+      <div class="ir-right">
+        <div class="ir-pts" id="p160">0</div>
+        <div class="ir-pts-label">points</div>
+        <div class="ir-unit-grade"><span class="pe-grade-chip" id="g160" style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid;background:var(--u-bg);border-color:var(--u-bd);color:var(--u-tx)">U</span></div>
+      </div>
+    </div>
+
+    <!-- F162 + resub -->
+    <div class="input-row" id="row162">
+      <div class="ir-left">
+        <div class="ir-code">F162 <span style="font-weight:400;color:var(--active);font-size:11px">NEA · resubmission open</span></div>
+        <div class="ir-name">Designing & Communicating UX/UI Solutions</div>
+        <div class="ir-slider-wrap">
+          <input type="range" min="0" max="24" value="0" step="1" id="s162">
+          <span class="ir-val"><span id="v162">0</span>/24</span>
+        </div>
+      </div>
+      <div class="ir-right">
+        <div class="ir-pts" id="p162">0</div>
+        <div class="ir-pts-label">points</div>
+        <div class="ir-unit-grade"><span class="pe-grade-chip" id="g162" style="font-size:10px;padding:2px 8px;border-radius:20px;border:0.5px solid;background:var(--u-bg);border-color:var(--u-bd);color:var(--u-tx)">U</span></div>
+      </div>
+    </div>
+    <div class="resub-note" id="resub-note" style="display:none">
+      <span>⚡</span>
+      <span id="resub-text">You have a resubmission opportunity for F162. Try moving the slider up to see how improving your criteria count could improve your final grade.</span>
+    </div>
+
+  </div>
+
+  <!-- POINTS BAR -->
+  <div class="points-bar-wrap">
+    <div class="pb-header">
+      <div>
+        <div class="pb-locked" id="locked-pts">0</div>
+        <div class="pb-locked-label">points secured so far</div>
+      </div>
+      <div class="pb-avail" id="avail-text">180 points still available</div>
+    </div>
+    <div class="pb-track">
+      <div class="pb-segments">
+        <div class="pb-seg-locked" id="seg-locked" style="flex:0"></div>
+        <div class="pb-seg-remaining" style="flex:300"></div>
+      </div>
+    </div>
+    <div class="pb-markers" id="pb-markers"></div>
+  </div>
+
+  <!-- GAP WARNING -->
+  <div class="gap-warning" id="gap-warning"></div>
+
+  <!-- GRADE TABLE — always fully visible -->
+  <p class="sec-label">What you need from your remaining units</p>
+  <div class="grade-table">
+    <div class="gt-header">
+      <span>Grade</span>
+      <span>F161 exam</span>
+      <span>F163 NEA</span>
+      <span>F165 NEA</span>
+    </div>
+    <div id="grade-rows"></div>
+  </div>
+
+  <p class="footer-note">
+    Points shown are estimates based on a pro-rata conversion from your raw mark or criteria count.
+    OCR sets exact exam grade boundaries after each exam series, so the F161 figure may shift slightly.
+    NEA unit thresholds: Pass = 10 criteria, Merit = 15, Distinction = 20 out of 24.
+    This tool is for guidance only — your teacher will discuss your formal predicted grade with you.
+  </p>
+
+</div>
+
+<script>
+// ── Grade definitions ─────────────────────────────────────────────────────
+const GRADES = [
+  { label:'D*', name:'Distinction*', min:270, bg:'#EEEDFE', bd:'#9B91E8', tx:'#1E185A' },
+  { label:'D',  name:'Distinction',  min:240, bg:'#E6F1FB', bd:'#5B9FDE', tx:'#05305A' },
+  { label:'M',  name:'Merit',        min:180, bg:'#EAF3DE', bd:'#7FB83A', tx:'#1A3D06' },
+  { label:'P',  name:'Pass',         min:120, bg:'#FAEEDA', bd:'#E8A020', tx:'#5C3100' },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function toUms(raw, max) { return Math.round((raw / max) * 60); }
+function unitGrade(u) {
+  if (u >= 48) return 'D';
+  if (u >= 36) return 'M';
+  if (u >= 24) return 'P';
+  return 'U';
+}
+function gradeStyle(g) {
+  const map = {
+    'D*':{ bg:'#EEEDFE', bd:'#9B91E8', tx:'#1E185A' },
+    'D': { bg:'#E6F1FB', bd:'#5B9FDE', tx:'#05305A' },
+    'M': { bg:'#EAF3DE', bd:'#7FB83A', tx:'#1A3D06' },
+    'P': { bg:'#FAEEDA', bd:'#E8A020', tx:'#5C3100' },
+    'U': { bg:'#F5F4EF', bd:'#D8D5CC', tx:'#6B6965' },
+  };
+  return map[g] || map['U'];
+}
+function applyGradeChip(el, grade) {
+  const s = gradeStyle(grade);
+  el.textContent = grade;
+  el.style.background = s.bg;
+  el.style.borderColor = s.bd;
+  el.style.color = s.tx;
+}
+function examGrade(r) {
+  if (r >= 48) return 'D';
+  if (r >= 36) return 'M';
+  if (r >= 24) return 'P';
+  return 'U';
+}
+function neaCritFromUms(u) { return Math.min(24, Math.ceil((u / 60) * 24)); }
+function neaUnitGradeFromCrit(c) {
+  if (c >= 20) return 'D';
+  if (c >= 15) return 'M';
+  if (c >= 10) return 'P';
+  return 'U';
+}
+
+// ── Markers ───────────────────────────────────────────────────────────────
+function buildMarkers() {
+  const container = document.getElementById('pb-markers');
+  container.innerHTML = '';
+  [{v:120,label:'Pass\n120'},{v:180,label:'Merit\n180'},{v:240,label:'Distinction\n240'},{v:270,label:'Dist*\n270'},{v:300,label:'Max\n300'}].forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'pb-marker';
+    div.style.left = (m.v / 300 * 100) + '%';
+    div.innerHTML = m.label.replace('\n', '<br>');
+    container.appendChild(div);
+  });
+}
+// ── Main render ───────────────────────────────────────────────────────────
+function render() {
+  const raw160 = +document.getElementById('s160').value;
+  const raw162 = +document.getElementById('s162').value;
+
+  document.getElementById('v160').textContent = raw160;
+  document.getElementById('v162').textContent = raw162;
+
+  const u160 = toUms(raw160, 60);
+  const u162 = toUms(raw162, 24);
+
+  document.getElementById('p160').textContent = u160;
+  document.getElementById('p162').textContent = u162;
+
+  applyGradeChip(document.getElementById('g160'), unitGrade(u160));
+  applyGradeChip(document.getElementById('g162'), unitGrade(u162));
+
+  // Row highlight if below pass
+  document.getElementById('row160').classList.toggle('unit-below-pass', u160 < 24);
+  document.getElementById('row162').classList.toggle('unit-below-pass', u162 < 24);
+
+  // Resubmission nudge
+  const resubNote = document.getElementById('resub-note');
+  const resubText = document.getElementById('resub-text');
+  resubNote.style.display = 'flex';
+  if (u162 < 24) {
+    resubText.textContent = `You currently have ${raw162} criteria (${u162} pts) — below the unit Pass threshold of 10 criteria. Your resubmission is a chance to close this gap. Try moving the slider to see the impact.`;
+  } else if (u162 < 36) {
+    resubText.textContent = `You have ${raw162} criteria (${u162} pts) — a unit Pass. Your resubmission could push you toward a Merit (15 criteria) or Distinction (20 criteria) on this unit.`;
+  } else if (u162 < 48) {
+    resubText.textContent = `You have ${raw162} criteria (${u162} pts) — a unit Merit. Your resubmission could push you to a Distinction on this unit (20 criteria needed).`;
+  } else {
+    resubText.textContent = `You have ${raw162} criteria (${u162} pts) — a unit Distinction on F162. Strong result.`;
+  }
+
+  const locked = u160 + u162;
+  const avail  = 300 - locked;
+
+  document.getElementById('locked-pts').textContent = locked;
+  document.getElementById('avail-text').textContent = `${avail} points still available from F161, F163 & F165`;
+
+  // Progress bar
+  document.getElementById('seg-locked').style.flex = locked;
+  document.querySelector('.pb-seg-remaining').style.flex = avail;
+
+  // Gap warning
+  const gw = document.getElementById('gap-warning');
+  const gaps = [];
+  if (u160 < 24) gaps.push(`<strong>F160</strong> is below the unit Pass threshold (${u160} pts — need 24). Your UMS still counts towards your total, but you have a gap at unit level.`);
+  if (u162 < 24) gaps.push(`<strong>F162</strong> is below the unit Pass threshold (${u162} pts / ${raw162} criteria — need 10 criteria). Use your resubmission opportunity to improve this.`);
+  if (gaps.length) {
+    gw.classList.add('show');
+    gw.innerHTML = '⚠ <strong>Unit gap:</strong> ' + gaps.join(' ');
+  } else {
+    gw.classList.remove('show');
+  }
+
+  // Grade table
+  renderGradeTable(locked, avail, raw162);
+}
+
+function renderGradeTable(locked, avail, raw162) {
+  const tbody = document.getElementById('grade-rows');
+  tbody.innerHTML = '';
+
+  GRADES.forEach(g => {
+    const needed   = Math.max(0, g.min - locked);
+    const possible = needed <= avail;
+
+    const tr = document.createElement('div');
+    tr.className = 'gt-row' + (possible ? '' : ' impossible');
+
+    const gs = { bg: g.bg, bd: g.bd, tx: g.tx };
+
+    if (!possible) {
+      tr.innerHTML = `
+        <div class="gt-grade" style="color:${g.tx}">${g.label}</div>
+        <div class="gt-cell" style="color:#B0ADA8;font-size:13px" colspan="3">Not achievable with current points</div>
+        <div class="gt-cell"></div>
+        <div class="gt-cell"></div>
+      `;
+    } else if (needed === 0) {
+      tr.innerHTML = `
+        <div class="gt-grade" style="color:${g.tx}">${g.label}</div>
+        <div class="gt-cell"><span class="gt-check">✓</span><div class="gt-small">already secured</div></div>
+        <div class="gt-cell"><span class="gt-check">✓</span></div>
+        <div class="gt-cell"><span class="gt-check">✓</span></div>
+      `;
+    } else {
+      // Split needed evenly across 3 remaining units
+      const perUnit    = Math.min(60, Math.ceil(needed / 3));
+      // F161 exam
+      const f161raw    = Math.min(60, Math.ceil(perUnit));
+      const f161grade  = examGrade(f161raw);
+      const f161gs     = gradeStyle(f161grade);
+      // F163 NEA
+      const f163crit   = neaCritFromUms(perUnit);
+      const f163grade  = neaUnitGradeFromCrit(f163crit);
+      const f163gs     = gradeStyle(f163grade);
+      // F165 NEA
+      const f165crit   = neaCritFromUms(perUnit);
+      const f165grade  = neaUnitGradeFromCrit(f165crit);
+      const f165gs     = gradeStyle(f165grade);
+
+      tr.innerHTML = `
+        <div class="gt-grade" style="color:${g.tx}">${g.label}
+          <div style="font-size:11px;font-weight:400;color:#9A9690;margin-top:1px">${needed} pts needed</div>
+        </div>
+        <div class="gt-cell">
+          <div class="gt-big" style="color:${f161gs.tx}">${f161raw}/60</div>
+          <div class="gt-small">raw marks</div>
+          <span style="font-size:10px;padding:1px 7px;border-radius:20px;border:0.5px solid;background:${f161gs.bg};border-color:${f161gs.bd};color:${f161gs.tx};margin-top:3px;display:inline-block">${f161grade} unit</span>
+        </div>
+        <div class="gt-cell">
+          <div class="gt-big" style="color:${f163gs.tx}">${f163crit}/24</div>
+          <div class="gt-small">criteria</div>
+          <span style="font-size:10px;padding:1px 7px;border-radius:20px;border:0.5px solid;background:${f163gs.bg};border-color:${f163gs.bd};color:${f163gs.tx};margin-top:3px;display:inline-block">${f163grade} unit</span>
+        </div>
+        <div class="gt-cell">
+          <div class="gt-big" style="color:${f165gs.tx}">${f165crit}/24</div>
+          <div class="gt-small">criteria</div>
+          <span style="font-size:10px;padding:1px 7px;border-radius:20px;border:0.5px solid;background:${f165gs.bg};border-color:${f165gs.bd};color:${f165gs.tx};margin-top:3px;display:inline-block">${f165grade} unit</span>
+        </div>
+      `;
+    }
+
+    tr.style.background = possible ? g.bg + '44' : '';
+    tbody.appendChild(tr);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  buildMarkers();
+  document.getElementById('s160').addEventListener('input', render);
+  document.getElementById('s162').addEventListener('input', render);
+  render();
+});
+</script>
+</body>
+</html>
