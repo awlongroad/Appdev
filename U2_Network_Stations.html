@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A1.1 Network Scale — Find Your Station</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F9FB;
+    --surface:#FFFFFF;
+    --surface-alt:#EFF4F8;
+    --ink:#0B1F3A;
+    --ink-muted:#5B6472;
+    --line:#E2E8F0;
+    --accent:#E4572E;
+    --accent-soft:#FBEAE3;
+    --focus-ring: rgba(228,87,46,0.35);
+    --font-display:'Space Grotesk','Segoe UI',sans-serif;
+    --font-body:'Inter',system-ui,-apple-system,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:56px 20px 80px;
+    line-height:1.5;
+  }
+  /* faint network-node backdrop */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image: radial-gradient(circle, #D7E2EC 1.4px, transparent 1.4px);
+    background-size: 28px 28px;
+    opacity:0.6;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    width:100%;
+    max-width:600px;
+  }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-muted);
+    margin-bottom:14px;
+  }
+  .eyebrow strong{ color:var(--accent); }
+
+  h1{
+    font-family:var(--font-display);
+    font-size:clamp(28px,5vw,36px);
+    font-weight:700;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  .lede{
+    color:var(--ink-muted);
+    font-size:16px;
+    margin:0 0 32px;
+    max-width:44ch;
+  }
+
+  /* ---- Number entry ---- */
+  .entry{
+    display:flex;
+    align-items:center;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .digit-box{
+    position:relative;
+    width:84px;
+    height:96px;
+    flex-shrink:0;
+  }
+  .digit-box input{
+    width:100%;
+    height:100%;
+    font-family:var(--font-mono);
+    font-size:44px;
+    font-weight:700;
+    text-align:center;
+    color:var(--ink);
+    background:var(--surface);
+    border:2px solid var(--line);
+    border-radius:14px;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+    caret-color:var(--accent);
+  }
+  .digit-box input:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 4px var(--focus-ring);
+  }
+  .digit-box input.invalid{
+    border-color:#D14343;
+  }
+
+  .quickpick{
+    display:flex;
+    gap:8px;
+  }
+  .quickpick button{
+    font-family:var(--font-mono);
+    font-size:16px;
+    font-weight:600;
+    width:44px;
+    height:44px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .quickpick button:hover{
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .quickpick button:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 4px var(--focus-ring);
+    border-color:var(--accent);
+  }
+  .quickpick button.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:#fff;
+  }
+
+  .hint{
+    font-size:13px;
+    color:var(--ink-muted);
+    min-height:20px;
+    margin-bottom:36px;
+  }
+  .hint.error{ color:#D14343; }
+
+  /* ---- Station card ---- */
+  #card{
+    display:none;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:32px clamp(20px,4vw,36px) 36px;
+    position:relative;
+    overflow:hidden;
+  }
+  #card.show{
+    display:block;
+    animation: rise .38s ease both;
+  }
+  @keyframes rise{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .scanline{
+    position:absolute;
+    top:0; left:0;
+    height:3px;
+    width:100%;
+    background:linear-gradient(90deg, var(--accent), transparent);
+    transform:scaleX(0);
+    transform-origin:left;
+  }
+  #card.show .scanline{
+    animation: scan .5s ease-out both;
+  }
+  @keyframes scan{
+    from{ transform:scaleX(0); }
+    to{ transform:scaleX(1); }
+  }
+
+  .station-eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:8px;
+  }
+  .station-title{
+    font-family:var(--font-display);
+    font-size:24px;
+    font-weight:700;
+    margin:0 0 16px;
+  }
+  .scenario{
+    font-size:15.5px;
+    color:#26344D;
+    margin:0 0 28px;
+  }
+
+  .divider{
+    border:none;
+    border-top:1px solid var(--line);
+    margin:0 0 24px;
+  }
+
+  .structure-heading{
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-muted);
+    margin:0 0 14px;
+  }
+
+  .field{
+    background:var(--surface-alt);
+    border-radius:12px;
+    padding:16px 18px;
+    margin-bottom:12px;
+  }
+  .field .label{
+    font-weight:600;
+    font-size:14.5px;
+    margin-bottom:4px;
+  }
+  .field .placeholder{
+    font-size:13.5px;
+    color:var(--ink-muted);
+    font-style:italic;
+  }
+
+  .reflect{
+    margin-top:24px;
+    padding:16px 18px;
+    background:var(--accent-soft);
+    border-radius:12px;
+    font-size:14px;
+  }
+  .reflect .label{
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:6px;
+  }
+
+  .actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:24px;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .copy-btn{
+    font-family:var(--font-body);
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--ink);
+    background:var(--surface);
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:9px 16px;
+    cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .copy-btn:hover{ border-color:var(--ink); }
+  .copy-btn:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 4px var(--focus-ring);
+  }
+  .copy-btn.copied{
+    border-color:var(--accent);
+    color:var(--accent);
+  }
+  .reset-link{
+    font-size:13px;
+    color:var(--ink-muted);
+    background:none;
+    border:none;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+
+  footer{
+    margin-top:40px;
+    font-size:12px;
+    color:var(--ink-muted);
+    text-align:center;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    #card.show, #card.show .scanline{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">A1.1 · Network Scale — <strong>Case Study Carousel</strong></div>
+  <h1>Find your station</h1>
+  <p class="lede">Enter the number your teacher gave you to see your case study and the structure to copy into your book.</p>
+
+  <div class="entry">
+    <div class="digit-box">
+      <input id="digitInput" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Station number, 1 to 4">
+    </div>
+    <div class="quickpick" id="quickpick" role="group" aria-label="Quick select station number">
+      <button type="button" data-num="1">1</button>
+      <button type="button" data-num="2">2</button>
+      <button type="button" data-num="3">3</button>
+      <button type="button" data-num="4">4</button>
+    </div>
+  </div>
+  <div class="hint" id="hint">Type a number, or tap one above.</div>
+
+  <div id="card" aria-live="polite">
+    <div class="scanline"></div>
+    <div class="station-eyebrow" id="stationEyebrow">Station 1</div>
+    <h2 class="station-title" id="stationTitle">Home Wi-Fi</h2>
+    <p class="scenario" id="stationScenario">—</p>
+
+    <hr class="divider">
+
+    <div class="structure-heading">Copy this structure into your book</div>
+
+    <div class="field">
+      <div class="label">Threats identified</div>
+      <div class="placeholder" id="hintThreats">List each threat you can find in the scenario above.</div>
+    </div>
+    <div class="field">
+      <div class="label">Likely consequences</div>
+      <div class="placeholder" id="hintConsequences">For each threat, note what could go wrong if it were exploited.</div>
+    </div>
+
+    <div class="reflect">
+      <div class="label">Reflect</div>
+      Which network scale do you think is hardest to secure, and why? Write 2–3 sentences in your book.
+    </div>
+
+    <div class="actions">
+      <button class="copy-btn" id="copyBtn" type="button">Copy structure</button>
+      <button class="reset-link" id="resetBtn" type="button">Enter a different number</button>
+    </div>
+  </div>
+
+  <footer>A1.1 Network Scale · No answers are entered here — record your work in your book.</footer>
+</div>
+
+<script>
+  const stations = {
+    1: {
+      title: "Home Wi-Fi",
+      scenario: "A household connects a laptop, smart TV, smart doorbell and phone to a single home Wi-Fi router. The router's default admin password has never been changed, and the same password is reused for email and online banking. The smart doorbell app was last updated over a year ago."
+    },
+    2: {
+      title: "School Network",
+      scenario: "A secondary school network connects staff computers, student laptops, printers and a central server holding student records. Students and staff are allowed to bring their own devices (BYOD) and connect to a guest Wi-Fi network. A member of staff recently left the school on bad terms but their network account has not yet been deactivated."
+    },
+    3: {
+      title: "NHS",
+      scenario: "An NHS trust runs a network connecting hospital appointment systems, patient records and medical equipment across several hospital sites. The systems must be available 24/7, and some computers still run older software because replacing it would disrupt patient care. Staff regularly access records remotely."
+    },
+    4: {
+      title: "National Grid",
+      scenario: "The National Grid manages the network of systems that control electricity distribution across the country. These systems must stay online at all times, since even a short outage affects millions of people, hospitals and businesses. The network is a known target for attackers seeking to cause large-scale disruption or make a political statement."
+    }
+  };
+
+  const digitInput = document.getElementById('digitInput');
+  const hint = document.getElementById('hint');
+  const card = document.getElementById('card');
+  const quickpick = document.getElementById('quickpick');
+  const copyBtn = document.getElementById('copyBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function showStation(n){
+    const s = stations[n];
+    if(!s) return;
+
+    document.getElementById('stationEyebrow').textContent = 'Station ' + n;
+    document.getElementById('stationTitle').textContent = s.title;
+    document.getElementById('stationScenario').textContent = s.scenario;
+
+    card.classList.remove('show');
+    void card.offsetWidth; // restart animation
+    card.classList.add('show');
+
+    hint.textContent = '';
+    hint.classList.remove('error');
+    digitInput.classList.remove('invalid');
+
+    [...quickpick.children].forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.num === String(n));
+    });
+
+    copyBtn.classList.remove('copied');
+    copyBtn.textContent = 'Copy structure';
+  }
+
+  function handleValue(raw){
+    const n = parseInt(raw, 10);
+    if(raw === ''){
+      hint.textContent = 'Type a number, or tap one above.';
+      hint.classList.remove('error');
+      digitInput.classList.remove('invalid');
+      card.classList.remove('show');
+      return;
+    }
+    if(isNaN(n) || n < 1 || n > 4){
+      hint.textContent = 'Enter a number between 1 and 4.';
+      hint.classList.add('error');
+      digitInput.classList.add('invalid');
+      card.classList.remove('show');
+      return;
+    }
+    showStation(n);
+  }
+
+  digitInput.addEventListener('input', (e)=>{
+    e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,1);
+    handleValue(e.target.value);
+  });
+
+  quickpick.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    digitInput.value = btn.dataset.num;
+    handleValue(btn.dataset.num);
+    digitInput.focus();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    digitInput.value = '';
+    handleValue('');
+    digitInput.focus();
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    const n = digitInput.value;
+    const s = stations[n];
+    if(!s) return;
+    const text = `Station ${n} — ${s.title}\n\nThreats identified:\n- \n\nLikely consequences:\n- \n\nReflect: Which network scale do you think is hardest to secure, and why?`;
+    try{
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = 'Copied ✓';
+      copyBtn.classList.add('copied');
+      setTimeout(()=>{ copyBtn.textContent = 'Copy structure'; copyBtn.classList.remove('copied'); }, 1800);
+    }catch(err){
+      copyBtn.textContent = 'Copy failed';
+      setTimeout(()=>{ copyBtn.textContent = 'Copy structure'; }, 1800);
+    }
+  });
+
+  digitInput.focus();
+</script>
+
+</body>
+</html>
