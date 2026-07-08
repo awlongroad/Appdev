@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A1.2 Security & Topologies — Find Your Topology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F9FB;
+    --surface:#FFFFFF;
+    --surface-alt:#EFF4F8;
+    --ink:#0B1F3A;
+    --ink-muted:#5B6472;
+    --line:#E2E8F0;
+    --accent:#E4572E;
+    --accent-soft:#FBEAE3;
+    --blue-soft:#EAF1FC;
+    --focus-ring: rgba(228,87,46,0.35);
+    --font-display:'Space Grotesk','Segoe UI',sans-serif;
+    --font-body:'Inter',system-ui,-apple-system,sans-serif;
+    --font-mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Consolas,monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:56px 20px 80px;
+    line-height:1.5;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background-image: radial-gradient(circle, #D7E2EC 1.4px, transparent 1.4px);
+    background-size: 28px 28px;
+    opacity:0.6;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .wrap{ position:relative; z-index:1; width:100%; max-width:620px; }
+
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    font-weight:600;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-muted);
+    margin-bottom:14px;
+  }
+  .eyebrow strong{ color:var(--accent); }
+
+  h1{
+    font-family:var(--font-display);
+    font-size:clamp(28px,5vw,36px);
+    font-weight:700;
+    margin:0 0 8px;
+    letter-spacing:-0.01em;
+  }
+  .lede{
+    color:var(--ink-muted);
+    font-size:16px;
+    margin:0 0 32px;
+    max-width:46ch;
+  }
+
+  /* ---- Number entry ---- */
+  .entry{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-bottom:14px; }
+  .digit-box{ position:relative; width:84px; height:96px; flex-shrink:0; }
+  .digit-box input{
+    width:100%; height:100%;
+    font-family:var(--font-mono);
+    font-size:44px; font-weight:700; text-align:center;
+    color:var(--ink);
+    background:var(--surface);
+    border:2px solid var(--line);
+    border-radius:14px;
+    outline:none;
+    transition:border-color .15s ease, box-shadow .15s ease;
+    caret-color:var(--accent);
+  }
+  .digit-box input:focus{ border-color:var(--accent); box-shadow:0 0 0 4px var(--focus-ring); }
+  .digit-box input.invalid{ border-color:#D14343; }
+
+  .quickpick{ display:flex; gap:8px; }
+  .quickpick button{
+    font-family:var(--font-mono);
+    font-size:16px; font-weight:600;
+    width:44px; height:44px;
+    border-radius:10px;
+    border:1.5px solid var(--line);
+    background:var(--surface);
+    color:var(--ink);
+    cursor:pointer;
+    transition:all .12s ease;
+  }
+  .quickpick button:hover{ border-color:var(--accent); color:var(--accent); }
+  .quickpick button:focus-visible{ outline:none; box-shadow:0 0 0 4px var(--focus-ring); border-color:var(--accent); }
+  .quickpick button.active{ background:var(--ink); border-color:var(--ink); color:#fff; }
+
+  .hint{ font-size:13px; color:var(--ink-muted); min-height:20px; margin-bottom:36px; }
+  .hint.error{ color:#D14343; }
+
+  /* ---- Station card ---- */
+  #card{ display:none; background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:32px clamp(20px,4vw,36px) 36px; position:relative; overflow:hidden; }
+  #card.show{ display:block; animation: rise .38s ease both; }
+  @keyframes rise{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:translateY(0); } }
+  .scanline{ position:absolute; top:0; left:0; height:3px; width:100%; background:linear-gradient(90deg, var(--accent), transparent); transform:scaleX(0); transform-origin:left; }
+  #card.show .scanline{ animation: scan .5s ease-out both; }
+  @keyframes scan{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+
+  .station-eyebrow{ font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+  .station-title{ font-family:var(--font-display); font-size:26px; font-weight:700; margin:0 0 14px; }
+  .definition{ font-size:15px; color:#26344D; margin:0 0 24px; background:var(--surface-alt); border-radius:12px; padding:14px 16px; }
+  .definition .label{ font-weight:600; font-size:12px; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-muted); display:block; margin-bottom:6px; }
+
+  .divider{ border:none; border-top:1px solid var(--line); margin:0 0 22px; }
+
+  .task-heading{ display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+  .task-num{
+    font-family:var(--font-mono); font-weight:700; font-size:13px;
+    width:24px; height:24px; border-radius:50%;
+    background:var(--ink); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .task-title{ font-family:var(--font-display); font-size:17px; font-weight:700; }
+
+  .task-block{ margin-bottom:28px; }
+  .task-body{ font-size:14.5px; color:#26344D; margin:0 0 14px; padding-left:34px; }
+
+  .excalidraw-btn{
+    display:inline-flex; align-items:center; gap:8px;
+    margin-left:34px;
+    font-family:var(--font-body); font-size:14px; font-weight:600;
+    color:#fff; background:var(--ink);
+    border:none; border-radius:10px;
+    padding:10px 18px;
+    text-decoration:none;
+    transition:background .15s ease;
+  }
+  .excalidraw-btn:hover{ background:#16305A; }
+  .excalidraw-btn svg{ width:15px; height:15px; flex-shrink:0; }
+
+  .draw-checklist{ list-style:none; margin:14px 0 0; padding:0 0 0 34px; }
+  .draw-checklist li{ font-size:13.5px; color:var(--ink-muted); margin-bottom:6px; padding-left:20px; position:relative; }
+  .draw-checklist li::before{ content:"\2713"; position:absolute; left:0; color:var(--accent); font-weight:700; font-size:12px; }
+
+  .field{ background:var(--surface-alt); border-radius:12px; padding:14px 16px; margin:0 0 10px 34px; }
+  .field .label{ font-weight:600; font-size:14px; margin-bottom:3px; }
+  .field .placeholder{ font-size:13px; color:var(--ink-muted); font-style:italic; }
+
+  .keywords{ margin:0 0 0 34px; font-size:13px; color:var(--ink-muted); }
+  .keywords strong{ color:var(--ink); font-weight:600; }
+
+  .actions{ display:flex; justify-content:space-between; align-items:center; margin-top:26px; gap:12px; flex-wrap:wrap; }
+  .copy-btn{
+    font-family:var(--font-body); font-size:13.5px; font-weight:600;
+    color:var(--ink); background:var(--surface);
+    border:1.5px solid var(--line); border-radius:10px;
+    padding:9px 16px; cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .copy-btn:hover{ border-color:var(--ink); }
+  .copy-btn:focus-visible{ outline:none; box-shadow:0 0 0 4px var(--focus-ring); }
+  .copy-btn.copied{ border-color:var(--accent); color:var(--accent); }
+  .reset-link{ font-size:13px; color:var(--ink-muted); background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; }
+
+  footer{ margin-top:40px; font-size:12px; color:var(--ink-muted); text-align:center; }
+
+  @media (prefers-reduced-motion: reduce){ #card.show, #card.show .scanline{ animation:none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="eyebrow">A1.2 · Security &amp; Topologies — <strong>Pair Activity</strong></div>
+  <h1>Find your topology</h1>
+  <p class="lede">Enter the number your teacher gave you to see which topology your pair is focusing on, what to draw, and what to research.</p>
+
+  <div class="entry">
+    <div class="digit-box">
+      <input id="digitInput" type="text" inputmode="numeric" maxlength="1" autocomplete="off" aria-label="Topology number, 1 to 4">
+    </div>
+    <div class="quickpick" id="quickpick" role="group" aria-label="Quick select topology number">
+      <button type="button" data-num="1">1</button>
+      <button type="button" data-num="2">2</button>
+      <button type="button" data-num="3">3</button>
+      <button type="button" data-num="4">4</button>
+    </div>
+  </div>
+  <div class="hint" id="hint">Type a number, or tap one above.</div>
+
+  <div id="card" aria-live="polite">
+    <div class="scanline"></div>
+    <div class="station-eyebrow" id="stationEyebrow">Number 1</div>
+    <h2 class="station-title" id="stationTitle">Star Topology</h2>
+    <div class="definition">
+      <span class="label">What it is</span>
+      <span id="stationDefinition">—</span>
+    </div>
+
+    <hr class="divider">
+
+    <div class="task-block">
+      <div class="task-heading"><span class="task-num">1</span><span class="task-title">Draw it</span></div>
+      <p class="task-body" id="drawInstruction">—</p>
+      <a class="excalidraw-btn" href="https://excalidraw.com" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.5 3.5 20 8 8 20H3.5v-4.5z"/><path d="M13.5 5.5 18 10"/></svg>
+        Open Excalidraw to draw
+      </a>
+      <ul class="draw-checklist" id="drawChecklist"></ul>
+    </div>
+
+    <div class="task-block">
+      <div class="task-heading"><span class="task-num">2</span><span class="task-title">Research &amp; record</span></div>
+      <p class="task-body">Use your notes, the textbook or trusted sites to find out the following, and write them in your book.</p>
+      <div class="field">
+        <div class="label">Security strengths (at least 2)</div>
+        <div class="placeholder">What makes this topology harder to attack or more resilient?</div>
+      </div>
+      <div class="field">
+        <div class="label">Security weaknesses (at least 2)</div>
+        <div class="placeholder">What makes this topology easier to attack, or harder to secure?</div>
+      </div>
+      <div class="keywords"><strong>Try to use:</strong> <span id="stationKeywords">—</span></div>
+    </div>
+
+    <div class="actions">
+      <button class="copy-btn" id="copyBtn" type="button">Copy structure</button>
+      <button class="reset-link" id="resetBtn" type="button">Enter a different number</button>
+    </div>
+  </div>
+
+  <footer>A1.2 Security &amp; Topologies · No answers are entered here — draw in Excalidraw and record research in your book.</footer>
+</div>
+
+<script>
+  const stations = {
+    1: {
+      title: "Star Topology",
+      definition: "All devices connect to a single central switch or hub. The switch is the only thing every device talks through.",
+      drawInstruction: "Draw a star topology in Excalidraw: one central switch, with at least 5 devices connected directly to it and nothing else.",
+      checklist: ["Label the central switch clearly", "Label each device (Device 1, Device 2, ...)", "Draw a line from the switch to every device"],
+      keywords: "point of failure, scalability"
+    },
+    2: {
+      title: "Mesh Topology",
+      definition: "Devices connect directly to many, or all, other devices in the network, rather than through one central point.",
+      drawInstruction: "Draw a mesh topology in Excalidraw: at least 5 devices, with lines connecting each device to several others (the more connections, the more \u2018mesh-like\u2019 it is).",
+      checklist: ["Label each device (Device 1, Device 2, ...)", "Connect each device to at least 2 others", "No single central device"],
+      keywords: "redundancy, scalability"
+    },
+    3: {
+      title: "Hybrid Topology",
+      definition: "A combination of two or more topologies \u2014 for example, two star networks joined together by a backbone link.",
+      drawInstruction: "Draw a hybrid topology in Excalidraw: two separate star networks (each with its own central switch and devices), connected to each other by one backbone link.",
+      checklist: ["Label both central switches (e.g. Switch A, Switch B)", "Connect several devices to each switch", "Draw and label the backbone link joining the two switches"],
+      keywords: "scalability, segmentation"
+    },
+    4: {
+      title: "Ad-hoc Topology",
+      definition: "Devices connect directly to each other as needed, with no fixed infrastructure and no central control point.",
+      drawInstruction: "Draw an ad-hoc topology in Excalidraw: at least 5 devices connected directly to each other in an irregular pattern, with no central device.",
+      checklist: ["Label each device (Device A, Device B, ...)", "Connect devices directly to each other, not through a switch", "Make the connections irregular \u2014 not every device needs the same number of links"],
+      keywords: "centralised control, data interception"
+    }
+  };
+
+  const digitInput = document.getElementById('digitInput');
+  const hint = document.getElementById('hint');
+  const card = document.getElementById('card');
+  const quickpick = document.getElementById('quickpick');
+  const copyBtn = document.getElementById('copyBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function showStation(n){
+    const s = stations[n];
+    if(!s) return;
+
+    document.getElementById('stationEyebrow').textContent = 'Number ' + n;
+    document.getElementById('stationTitle').textContent = s.title;
+    document.getElementById('stationDefinition').textContent = s.definition;
+    document.getElementById('drawInstruction').textContent = s.drawInstruction;
+    document.getElementById('stationKeywords').textContent = s.keywords;
+
+    const list = document.getElementById('drawChecklist');
+    list.innerHTML = '';
+    s.checklist.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+
+    card.classList.remove('show');
+    void card.offsetWidth;
+    card.classList.add('show');
+
+    hint.textContent = '';
+    hint.classList.remove('error');
+    digitInput.classList.remove('invalid');
+
+    [...quickpick.children].forEach(btn=>{
+      btn.classList.toggle('active', btn.dataset.num === String(n));
+    });
+
+    copyBtn.classList.remove('copied');
+    copyBtn.textContent = 'Copy structure';
+  }
+
+  function handleValue(raw){
+    const n = parseInt(raw, 10);
+    if(raw === ''){
+      hint.textContent = 'Type a number, or tap one above.';
+      hint.classList.remove('error');
+      digitInput.classList.remove('invalid');
+      card.classList.remove('show');
+      return;
+    }
+    if(isNaN(n) || n < 1 || n > 4){
+      hint.textContent = 'Enter a number between 1 and 4.';
+      hint.classList.add('error');
+      digitInput.classList.add('invalid');
+      card.classList.remove('show');
+      return;
+    }
+    showStation(n);
+  }
+
+  digitInput.addEventListener('input', (e)=>{
+    e.target.value = e.target.value.replace(/[^0-9]/g,'').slice(0,1);
+    handleValue(e.target.value);
+  });
+
+  quickpick.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    digitInput.value = btn.dataset.num;
+    handleValue(btn.dataset.num);
+    digitInput.focus();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    digitInput.value = '';
+    handleValue('');
+    digitInput.focus();
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    const n = digitInput.value;
+    const s = stations[n];
+    if(!s) return;
+    const text = `${s.title}\n\nDraw: ${s.drawInstruction}\n\nSecurity strengths (at least 2):\n- \n\nSecurity weaknesses (at least 2):\n- \n\nTry to use: ${s.keywords}`;
+    try{
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = 'Copied \u2713';
+      copyBtn.classList.add('copied');
+      setTimeout(()=>{ copyBtn.textContent = 'Copy structure'; copyBtn.classList.remove('copied'); }, 1800);
+    }catch(err){
+      copyBtn.textContent = 'Copy failed';
+      setTimeout(()=>{ copyBtn.textContent = 'Copy structure'; }, 1800);
+    }
+  });
+
+  digitInput.focus();
+</script>
+
+</body>
+</html>
